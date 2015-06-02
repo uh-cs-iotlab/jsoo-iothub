@@ -38,4 +38,3 @@ Acknowledgements
 The work has been carried out within the framework of the Internet of Things Program of DIGILE nominated to organize and manage the programs of the Strategic Center for Science, Technology and Innovation (SHOK) in the field of ICT funded by the Finnish Funding Agency for Technology and Innovation (TEKES).
 
 For more information, please visit http://www.internetofthings.fi/ and http://www.digile.fi/.
-
