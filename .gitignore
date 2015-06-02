@@ -21,3 +21,7 @@ setup.log
 
 # js_of_ocaml produces js
 *.js
+
+.paths
+.project
+.settings/
