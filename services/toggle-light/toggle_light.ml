@@ -30,12 +30,19 @@ end
 let needConfiguration () =
 	false 
 
-let _ =
-  let need = Js.wrap_callback needConfiguration in
-  let open Js.Unsafe in
-	let methodArray =  [|("needConfiguration", inject need)|](*; ("abs", inject abs); ("zero", inject zero)|];*) in
-  global##toggleLightService <- obj methodArray
-
 let get url =
 	http_get url
+
+let _ =
+	Js.Unsafe.global##toggleLightService <- jsobject
+    method need = false
+  end
+  (*let need = Js.wrap_callback needConfiguration in
+  let open Js.Unsafe in
+	let methodArray =  [|("needConfiguration", inject need)|](*; ("abs", inject abs); ("zero", inject zero)|];*) in
+  global##toggleLightService <- obj methodArray;
+	global##toggleLightService;
+	()*)
+
+
 
