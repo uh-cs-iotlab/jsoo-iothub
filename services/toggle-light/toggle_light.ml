@@ -18,24 +18,46 @@
  * Author: Julien Mineraud <julien.mineraud@cs.helsinki.fi>
  *)
 
-open Iothub_core
+(* open Iothub_core
 
-let name = "toggle-light-service"
+let name = "toggle-light-service" *)
+
+open Lwt
+open Js
 
 (* define the interface of toggle-light-service *)
-class type toggleLightService = object
-  method needConfiguration : (unit -> bool) Js.callback Js.writeonly_prop
+(*class type toggleLightService = object
+  method needConfiguration : (unit -> bool) Js.callback Js.readonly_prop
 end
 
 let needConfiguration () =
-	false 
+	true 
+ let get url =
+	http_get url *)
+	
+let print s =
+  Js.Unsafe.fun_call (Js.Unsafe.variable "print") [|Js.Unsafe.inject (Js.string s)|]
+	
+let log s =
+  Js.Unsafe.meth_call (Js.Unsafe.variable "console") "log" [|Js.Unsafe.inject (Js.string s)|]
 
-let get url =
-	http_get url
+let sleep d =
+	let (t, w) = Lwt.task () in
+
+let startFunction () =
+	let interval = 1000. in
+	let get_time () = (jsnew date_now ())##toString() in
+	let rec f () =
+		let time = get_time() in
+		print ("Hello from toggle_light.ml at " ^ (Js.to_string time));
+		Lwt_js.sleep interval >>= f
+	in ignore(f())
 
 let _ =
 	Js.Unsafe.global##toggleLightService <- jsobject
-    method need = false
+    method needConfiguration () = Js._true
+		method start () = startFunction ()
+		
   end
   (*let need = Js.wrap_callback needConfiguration in
   let open Js.Unsafe in
