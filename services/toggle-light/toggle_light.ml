@@ -37,27 +37,32 @@ let needConfiguration () =
 	
 let print s =
   Js.Unsafe.fun_call (Js.Unsafe.variable "print") [|Js.Unsafe.inject (Js.string s)|]
-	
+
 let log s =
   Js.Unsafe.meth_call (Js.Unsafe.variable "console") "log" [|Js.Unsafe.inject (Js.string s)|]
 
 let sleep d =
 	let (t, w) = Lwt.task () in
-
+	let id =
+		Js.Unsafe.fun_call (Js.Unsafe.variable "setTimeout") [|Js.Unsafe.inject (
+			Js.wrap_callback (fun () -> Lwt.wakeup w ())); Js.Unsafe.inject (Js.float (d *. 1000.))|]
+  in
+  Lwt.on_cancel t (fun () -> Js.Unsafe.fun_call (Js.Unsafe.variable "clearTimeout") [|Js.Unsafe.inject id |]);
+  t
+	
 let startFunction () =
-	let interval = 1000. in
+	let intervalInSeconds = 1. in
 	let get_time () = (jsnew date_now ())##toString() in
 	let rec f () =
 		let time = get_time() in
 		print ("Hello from toggle_light.ml at " ^ (Js.to_string time));
-		Lwt_js.sleep interval >>= f
+		sleep intervalInSeconds >>= f
 	in ignore(f())
 
 let _ =
 	Js.Unsafe.global##toggleLightService <- jsobject
     method needConfiguration () = Js._true
 		method start () = startFunction ()
-		
   end
   (*let need = Js.wrap_callback needConfiguration in
   let open Js.Unsafe in
