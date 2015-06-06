@@ -22,12 +22,22 @@ open Lwt
 open Js
 open XmlHttpRequest
 
-let (>>=) = Lwt.bind
+let print s =
+  Js.Unsafe.fun_call (Js.Unsafe.variable "print") [|Js.Unsafe.inject (Js.string s)|]
 
-let js = Js.string
-let document = Dom_html.window##document
+let log s =
+  Js.Unsafe.meth_call (Js.Unsafe.variable "console") "log" [|Js.Unsafe.inject (Js.string s)|]
 
 exception Wrong_request_type of string
+
+let sleep d =
+	let (t, w) = Lwt.task () in
+	let id =
+		Js.Unsafe.fun_call (Js.Unsafe.variable "setTimeout") [|Js.Unsafe.inject (
+			Js.wrap_callback (fun () -> Lwt.wakeup w ())); Js.Unsafe.inject (Js.float (d *. 1000.))|]
+  in
+  Lwt.on_cancel t (fun () -> Js.Unsafe.fun_call (Js.Unsafe.variable "clearTimeout") [|Js.Unsafe.inject id |]);
+  t
 
 let xml_http_request request_type url json =
 	let _ = 
@@ -64,7 +74,8 @@ let xml_http_request request_type url json =
 					headers = headers
 					}
 			| _ -> ()));
-	(match json with
+	(
+	match json with
 	| None -> req##send (Js.null)
 	| Some j -> req##send(Js.some (Js.string (to_string j)))
  	);
@@ -82,7 +93,8 @@ let http_method request_type url json =
 	let code_ = response.XmlHttpRequest.code in
 	let type_ = response.XmlHttpRequest.headers "Content-type" in
 	let msg = response.XmlHttpRequest.content in
-	if (code_ = 0 || code_ = 200) && (check_content_type ~mime_type:"application/json" type_)
+	(*if (code_ = 0 || code_ = 200) && (check_content_type ~mime_type:"application/json" type_)*)
+	if (code_ = 0 || code_ = 200)
 	then Lwt.return (msg)
 	else fst (Lwt.wait ())
 

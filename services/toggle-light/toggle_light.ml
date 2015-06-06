@@ -18,39 +18,11 @@
  * Author: Julien Mineraud <julien.mineraud@cs.helsinki.fi>
  *)
 
-(* open Iothub_core
-
-let name = "toggle-light-service" *)
-
+open Iothub_core
 open Lwt
 open Js
-
-(* define the interface of toggle-light-service *)
-(*class type toggleLightService = object
-  method needConfiguration : (unit -> bool) Js.callback Js.readonly_prop
-end
-
-let needConfiguration () =
-	true 
- let get url =
-	http_get url *)
 	
-let print s =
-  Js.Unsafe.fun_call (Js.Unsafe.variable "print") [|Js.Unsafe.inject (Js.string s)|]
-
-let log s =
-  Js.Unsafe.meth_call (Js.Unsafe.variable "console") "log" [|Js.Unsafe.inject (Js.string s)|]
-
-let sleep d =
-	let (t, w) = Lwt.task () in
-	let id =
-		Js.Unsafe.fun_call (Js.Unsafe.variable "setTimeout") [|Js.Unsafe.inject (
-			Js.wrap_callback (fun () -> Lwt.wakeup w ())); Js.Unsafe.inject (Js.float (d *. 1000.))|]
-  in
-  Lwt.on_cancel t (fun () -> Js.Unsafe.fun_call (Js.Unsafe.variable "clearTimeout") [|Js.Unsafe.inject id |]);
-  t
-	
-let startFunction () =
+let run () =
 	let intervalInSeconds = 1. in
 	let get_time () = (jsnew date_now ())##toString() in
 	let rec f () =
@@ -61,15 +33,8 @@ let startFunction () =
 
 let _ =
 	Js.Unsafe.global##toggleLightService <- jsobject
-    method needConfiguration () = Js._true
-		method start () = startFunction ()
+    method needConfiguration = Js._true
+		method checkConfiguration config = Js._true
+		method run = run
   end
-  (*let need = Js.wrap_callback needConfiguration in
-  let open Js.Unsafe in
-	let methodArray =  [|("needConfiguration", inject need)|](*; ("abs", inject abs); ("zero", inject zero)|];*) in
-  global##toggleLightService <- obj methodArray;
-	global##toggleLightService;
-	()*)
-
-
 
