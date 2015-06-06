@@ -34,31 +34,39 @@ let time_diff before after =
 	let d = inner_time_diff before after in
 	float_of_number d
 
-let check_room events_feed =
+let check_room events_feed room_light_feed =
 	let get_time () = (jsnew date_now ())##toString() in
 	let curr_time = get_time() in
-	let needToDim period =
+	let needToDimOneP period =
 		match period with
-		| `Period (`Date(s),`Date(e,_)) ->
+		| `Period (`Date(s,_),`Date(e,_)) ->
 			let de = time_diff (Js.to_string curr_time) e  in
 			let ds = time_diff s (Js.to_string curr_time) in
 			de > 0. && ds > 0.0
 		| _ -> false
 	in
+	let needToDim events =
+		match events with
+		| `Series s -> List.exists (fun p -> 
+			begin match p with
+			| `Period _ -> needToDimOneP p
+			| _ -> false
+			end
+			) s
+		| `Period _ -> needToDimOneP events
+		| _ -> false
+	in
 	get events_feed >>= (fun periods ->
 		let json = Yojson.Basic.from_string periods in
 		let events = iothub_data_from_json json in
-		begin match events with
-		| `Series s -> List.iter (fun p -> 
-			begin match p with
-			| `Period _ -> if needToDim p then print "Yes" else print "No";
-			| _ -> ()
-			end
-			) s
-		| `Period _ -> if needToDim events then print "Yes" else print "No";
-		| _ -> ()
+		begin 
+			if needToDim events 
+			then
+				(*post room_light_feed >>= (fun *)
+				print ("I need to dim the lights")
+			else
+				print ("No need to dim the lights")
 		end;
-		(*print (Yojson.Basic.pretty_to_string (iothub_data_to_json events));*)
 		Lwt.return ()
 	)
 	
