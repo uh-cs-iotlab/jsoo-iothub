@@ -34,6 +34,12 @@ let time_diff before after =
 	let d = inner_time_diff before after in
 	float_of_number d
 
+let fade feed =
+	let jsin = Js.string "{\"light\": {\"luminosity\":1, \"fade\": 90}}" in
+	let jsout = Js.string "{\"light\": {\"luminosity\":100, \"fade\": 90}}" in
+	Js.Unsafe.fun_call (Js.Unsafe.variable "native_dim") 
+		[|Js.Unsafe.inject (Js.string feed); Js.Unsafe.inject jsin; Js.Unsafe.inject jsout|]
+
 let check_room events_feed room_light_feed =
 	let get_time () = (jsnew date_now ())##toString() in
 	let curr_time = get_time() in
@@ -62,20 +68,19 @@ let check_room events_feed room_light_feed =
 		begin 
 			if needToDim events 
 			then
-				(*post room_light_feed >>= (fun *)
-				print ("I need to dim the lights")
+				 	fade room_light_feed
 			else
 				print ("No need to dim the lights")
 		end;
 		Lwt.return ()
 	)
-	
 
 let run () =
 	let interval = 5. in
 	let eventsFeed = "http://127.0.0.1:8081/feeds/atomicFeature1" in
+	let room_light_feed = "http://127.0.0.1:8081/feeds/atomicFeature2" in
 	let rec f () =
-		ignore(check_room eventsFeed);
+		ignore(check_room eventsFeed room_light_feed);
 		sleep interval >>= f
 	in ignore(f())
 

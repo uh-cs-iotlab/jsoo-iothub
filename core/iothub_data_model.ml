@@ -32,6 +32,7 @@ let date_format_from_string = function
 type iothub_date_data = [ `Date of string * iothub_date_format ]
 
 type iothub_data = [
+	| `Light of int * float
 	| `String of string
 	| `Float of float
 	| `Int of int
@@ -65,6 +66,7 @@ let rec iothub_data_to_json = function
 	| `Float f -> `Assoc [("float", `Float f)]
 	| `Int i -> `Assoc [("int", `Int i)]
 	| `Bool b -> `Assoc [("bool", `Bool b)]
+	| `Light (l,f) -> `Assoc [("light", `Assoc [("luminosity", `Int l); ("fade", `Float f)])]
 	| `Date d -> iot_hub_date_data_to_json (`Date d)
 	| `Period (s, e) -> 
 		let _s = ("start", iot_hub_date_data_to_json s) in
@@ -102,6 +104,20 @@ let period_data_from_json json =
 		`Period (s, e)
 	| _ -> raise(Wrong_iothub_data "period")
 
+let light_data_from_json json =
+	let open Yojson.Basic.Util in
+	let p_json = json |> member "light" in
+	match p_json with
+	| `Assoc _ ->
+		let l = match p_json |> member "luminosity" with
+		| `Int l' -> l'
+		| _ -> raise(Wrong_iothub_data "luminosity") in
+		let f = match p_json |> member "fade" with
+		| `Assoc f' -> f'
+		| _ -> raise(Wrong_iothub_data "luminosity") in
+		`Light (l, f)
+	| _ -> raise(Wrong_iothub_data "luminosity")
+
 let rec iothub_data_from_json json =
 	match json with
 	| `List a -> `Series (List.map (fun j -> iothub_data_from_json j) a)
@@ -111,6 +127,8 @@ let rec iothub_data_from_json json =
 			period_data_from_json json
 		else if json |> member "date" != `Null then 
 			date_data_from_json json
+		else if json |> member "light" != `Null then
+			light_data_from_json json
 		else if json |> member "string" != `Null then
 			let v = match json |> member "string" with
 			| `String v' -> v'
